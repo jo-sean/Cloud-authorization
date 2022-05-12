@@ -149,7 +149,7 @@ def boats_get_post():
 
         res = make_response(json.dumps(boat_list))
         res.headers.set('Content-Type', 'application/json')
-        res.status_code = 404
+        res.status_code = 200
         return res
 
     else:
