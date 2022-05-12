@@ -36,26 +36,22 @@ def boats_get_post():
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             auth_header = auth_header.split(" ")[1]
-            print(auth_header)
             # Checks validity of JWT provided
             try:
                 sub = id_token.verify_oauth2_token(
                     auth_header, requests.Request(), constants.client_id)['sub']
-                print(sub)
             except:
                 err = {"Error": "JWT is invalid and could not be verified"}
-                res = make_response(err)
-                res.headers.set('Content-Type', 'application/json')
+                res = make_response(json2html.convert(json=err))
+                res.headers.set('Content-Type', 'text/html')
                 res.status_code = 401
                 return res
         else:
             err = {"Error": "Authorization header is missing"}
-            res = make_response(err)
+            res = make_response(json2html.convert(json=err))
             res.headers.set('Content-Type', 'application/json')
             res.status_code = 401
             return res
-
-        print('valid?: ', sub)
 
         # Checks if sent data is json, if not return 415
         try:
@@ -104,7 +100,7 @@ def boats_get_post():
         # Create new boat entity
         new_boat = datastore.entity.Entity(key=client.key(constants.boats))
         new_boat.update({"name": content["name"], "type": content["type"],
-                         "length": content["length"], "owner": sub})
+                         "length": content["length"], "public": content["public"], "owner": sub})
         client.put(new_boat)
 
         new_boat["id"] = new_boat.key.id
@@ -122,12 +118,12 @@ def boats_get_post():
     # Each boat is the response should be a JSON with at least the 6 required properties shown above.
     # The response must not be paginated.
 
-
         public = False
-        
+        sub = None
         # Checks if JWT was provided in Authorization header
         if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization'][1]
+            auth_header = request.headers['Authorization']
+            auth_header = auth_header.split(" ")[1]
             # Checks validity of JWT provided
             try:
                 sub = id_token.verify_oauth2_token(
@@ -149,15 +145,23 @@ def boats_get_post():
 
         for curr_boat in boat_list:
             curr_boat["id"] = curr_boat.key.id
+            curr_boat["self"] = request.base_url + "/" + str(curr_boat.key.id)
 
-
-        res = make_response(boat_list)
+        res = make_response(json.dumps(boat_list))
         res.headers.set('Content-Type', 'application/json')
         res.status_code = 404
         return res
 
+    else:
+        # Status code 405
+        res = make_response()
+        res.headers.set('Allow', 'GET, DELETE')
+        res.headers.set('Content-Type', 'text/html')
+        res.status_code = 405
+        return res
 
-@bp.route('/<bid>', methods=['DELETE', 'GET'])
+
+@bp.route('/<bid>', methods=['DELETE'])
 def boats_delete(bid):
     if request.method == 'DELETE':
 
@@ -174,8 +178,8 @@ def boats_delete(bid):
 
         elif 'Authorization' not in request.headers:
             err = {"Error": "Authorization header is missing"}
-            res = make_response(err)
-            res.headers.set('Content-Type', 'application/json')
+            res = make_response(json2html.convert(json=err))
+            res.headers.set('Content-Type', 'text/html')
             res.status_code = 401
             return res
 
@@ -186,8 +190,8 @@ def boats_delete(bid):
                 auth_header, requests.Request(), constants.client_id)['sub']
         except:
             err = {"Error": "JWT is invalid and could not be verified"}
-            res = make_response(err)
-            res.headers.set('Content-Type', 'application/json')
+            res = make_response(json2html.convert(json=err))
+            res.headers.set('Content-Type', 'text/html')
             res.status_code = 401
             return res
 
@@ -203,32 +207,10 @@ def boats_delete(bid):
             res.status_code = 204
         return res
 
-    elif request.method == "GET":
-        boat_key = client.key(constants.boats, int(bid))
-        boat = client.get(key=boat_key)
-
-        # Check if boat exists
-        if not boat:
-            err = {"Error": "No boat with this boat_id exists"}
-            res = make_response(err)
-            res.headers.set('Content-Type', 'application/json')
-            res.status_code = 404
-            return res
-
-        boat["id"] = boat.key.id
-        boat["self"] = request.base_url
-
-        # Sends json response
-        res = make_response(json.dumps(boat))
-        res.headers.set('Content-Type', 'application/json')
-        res.status_code = 200
-        return res
-
-
     else:
         # Status code 405
         res = make_response()
-        res.headers.set('Allow', 'GET, PUT, PATCH, DELETE')
+        res.headers.set('Allow', 'DELETE')
         res.headers.set('Content-Type', 'text/html')
         res.status_code = 405
         return res

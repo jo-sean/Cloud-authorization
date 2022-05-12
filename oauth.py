@@ -25,12 +25,12 @@ def token_user_details():
                         'client_id': constants.client_id,
                         'client_secret': constants.secret,
                         'redirect_uri': constants.redirect_uri,
-                        'grant_type': 'authorization_code'}
+                        'grant_type': 'authorization_code',
+                        'access_type': 'offline'}
 
                 # POST method for token
                 res_token = requests.post('https://oauth2.googleapis.com/token', data=data).json()
 
-                # session['credentials'] = res_token.text
 
                 # Get user details
                 headers = {'Authorization': 'Bearer {}'.format(res_token['access_token'])}

@@ -1,12 +1,14 @@
 from flask import Flask, render_template
 import oauth
 import login
+import owners
 import boats
 
 app = Flask(__name__)
 app.register_blueprint(login.bp)
 app.register_blueprint(oauth.bp)
 app.register_blueprint(boats.bp)
+app.register_blueprint(owners.bp)
 
 
 @app.route('/')
