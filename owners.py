@@ -7,7 +7,7 @@ client = datastore.Client()
 
 bp = Blueprint('owners', __name__, url_prefix='/owners')
 
-bp.route('/<owner_id>/boats', methods=['GET'])
+@bp.route('/<owner_id>/boats', methods=['GET'])
 def owner_get_public(owner_id):
 
     if request.method == "GET":

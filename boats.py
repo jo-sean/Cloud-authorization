@@ -183,7 +183,8 @@ def boats_delete(bid):
             res.status_code = 401
             return res
 
-        auth_header = request.headers['Authorization'][1]
+        auth_header = request.headers['Authorization']
+        auth_header = auth_header.split(" ")[1]
         # Checks validity of JWT provided
         try:
             sub = id_token.verify_oauth2_token(
